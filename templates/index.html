@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDImg2Hub - Markdown图片上传工具</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background-color: #218838;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tool-description {
+            background-color: #e7f5fe;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>MDImg2Hub - Markdown图片上传工具</h1>
+    <div class="container">
+        <div class="tool-description">
+            <h3>工具说明</h3>
+            <p>MDImg2Hub 是一个专门用于处理 Markdown 文件中的图片引用的工具。它可以将您 Markdown 文件中引用的本地图片上传到 GitHub 图床，并自动替换 Markdown 中的图片链接。</p>
+            <p>使用步骤：</p>
+            <ol>
+                <li>将您的 Markdown 文件和其引用的图片打包成 ZIP 压缩文件</li>
+                <li>上传该 ZIP 文件</li>
+                <li>系统会自动处理并提供下载链接</li>
+            </ol>
+            <div class="warning">
+                <strong>注意：</strong> 每个 ZIP 压缩包中只能包含一个 Markdown 文件和其引用的图片。
+            </div>
+        </div>
+
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="zipFile">上传 Markdown ZIP 压缩包：</label>
+                <input type="file" id="zipFile" name="zipFile" accept=".zip" required>
+                <small>ZIP 压缩包应包含一个 Markdown 文件及其引用的图片。</small>
+            </div>
+            <button type="submit">开始处理</button>
+        </form>
+        
+        <div id="loading" class="loading">
+            <p>正在处理您的文件，请稍候...</p>
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            resultDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                
+                if (data.Success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = '<h3>处理完成！</h3>' +
+                        '<p>原始文件: ' + data.OriginalFile + '</p>' +
+                        '<p>已处理 ' + data.ImageCount + ' 张图片。</p>' +
+                        '<a href="/download?file=' + encodeURIComponent(data.ProcessedFile) + '" class="download-btn">下载处理后的文件</a>';
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = '<h3>错误</h3>' +
+                        '<p>' + data.Error + '</p>';
+                }
+            })
+            .catch(error => {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '<h3>错误</h3>' +
+                    '<p>发生意外错误: ' + error.message + '</p>';
+            });
+        });
+    </script>
+</body>
+</html>
