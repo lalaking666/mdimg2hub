@@ -3,10 +3,18 @@
 ## 功能特点
 
 - 自动上传 Markdown 文件中引用的本地图片到 GitHub 仓库
+
 - 自动替换 Markdown 文件中的本地图片链接为 GitHub 链接
+
 - 支持使用 jsDelivr CDN 加速图片访问
+
 - 简单易用的 Web 界面
+
 - 支持 Docker 部署
+
+  <img src="https://cdn.jsdelivr.net/gh/lalaking666/github-pic@main/202503181613713.png" alt="image-20250318161321666" style="zoom:67%;" />
+
+
 
 ## 使用方法
 
@@ -46,6 +54,8 @@ docker run -d \
 2. 将您的 Markdown 文件和其引用的图片打包成 ZIP 压缩文件
 3. 上传 ZIP 文件
 4. 等待处理完成后，下载处理后的 Markdown 文件
+
+
 
 ## 注意事项
 
